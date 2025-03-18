@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI 详细分析报告</title>
+    <style>
+        /* 背景渐变 */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4, #eafaf1);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #333;
+        }
+
+        .analysis {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        /* 评分背景色 */
+        .summary {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+        .S { background-color: #2ecc71; color: white; }  /* 深绿 - 最佳匹配 */
+        .A { background-color: #58d68d; color: white; }  /* 亮绿 - 很适合 */
+        .B { background-color: #82e0aa; color: white; }  /* 浅绿 - 较适合 */
+        .C { background-color: #f4d03f; color: #333; }  /* 米黄色 - 一般 */
+        .D { background-color: #e67e22; color: white; }  /* 橙色 - 偏低匹配 */
+        .E { background-color: #e74c3c; color: white; }  /* 浅红 - 最弱匹配 */
+
+        /* 按钮样式 */
+        .container {
+            text-align: center; /* 让按钮居中 */
+        }
+
+        .btn {
+            display: inline-block;  /* 避免占满整行 */
+            width: auto;  /* 让按钮根据内容调整 */
+            min-width: 150px; /* 防止按钮过小 */
+            padding: 10px 20px; /* 缩小按钮尺寸 */
+            font-size: 16px;  /* 适中字体大小 */
+            border-radius: 8px;
+            font-weight: 500;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .btn-success {
+            background-color: #2ecc71;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>MBTI 配对分析报告</h2>
+    <div id="report" class="analysis"></div>
+    <a href="javascript:history.back()" class="btn btn-primary">返回上一页</a>
+</div>
+
+<script>
+    // 获取 URL 参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const userMbti = urlParams.get("user_mbti");
+    const matchMbti = urlParams.get("match_mbti");
+
+    if (!userMbti || !matchMbti || userMbti.length !== 4 || matchMbti.length !== 4) {
+        document.getElementById("report").innerHTML = "<p>缺少必要的 MBTI 信息。</p>";
+    } else {
+        document.getElementById("report").innerHTML = generateMbtiReport(userMbti, matchMbti);
+    }
+
+    function generateMbtiReport(user, match) {
+        let analysis = `<h3>${user} & ${match} 配对分析</h3>`;
+
+        const dimensions = [
+            { label: "社交能量 (E vs I)", matchText: "你们在社交能量上相似，容易理解彼此。", diffText: "你们在社交能量上存在差异，可能需要互相适应。" },
+            { label: "认知方式 (N vs S)", matchText: "你们对世界的感知方式相似，心有灵犀，交流更顺畅。", diffText: "你们的世界观不同，可能需要更多沟通来理解彼此的想法。" },
+            { label: "决策方式 (T vs F)", matchText: "你们的决策方式相似，容易共鸣，确容易缺乏新鲜感。", diffText: "你们的决策方式不同，可以互补彼此的思维方式。" },
+            { label: "生活方式 (J vs P)", matchText: "你们的生活方式相似，日常相处更加容易，容易达成共识。", diffText: "你们的生活节奏不同，可能需要协调彼此的习惯。" }
+        ];
+
+        for (let i = 0; i < 4; i++) {
+            const isSame = user[i] === match[i];
+            analysis += `<p><strong>${dimensions[i].label}:</strong> ${isSame ? dimensions[i].matchText : dimensions[i].diffText}</p>`;
+        }
+
+        // 计算匹配得分
+        const score = calculateRP(user, match);
+        const rating = getRating(score);
+        const summaryText = getSummaryText(score);
+
+        // 评分显示
+        analysis += `<h3 class="summary ${rating}">匹配评分：${score}（${rating} 级）</h3>`;
+        analysis += `<p class="summary ${rating}">${summaryText}</p>`;
+
+        return analysis;
+    }
+
+    function calculateRP(mbti1, mbti2) {
+        let score = 0;
+        if (mbti1[0] === mbti2[0]) score += 20;
+        if (mbti1[1] === mbti2[1]) score += 40;
+        if (mbti1[2] !== mbti2[2]) score += 30;
+        if (mbti1[3] !== mbti2[3]) score += 10;
+        if (mbti1 === mbti2) score = 100;
+        return parseFloat(score.toFixed(2));
+    }
+
+    function getRating(score) {
+        if (score >= 100) return "S";
+        if (score >= 80) return "A";
+        if (score >= 60) return "B";
+        if (score >= 40) return "C";
+        if (score >= 20) return "D";
+        return "E";
+    }
+
+    function getSummaryText(score) {
+        const summaries = {
+            "S": "你们简直是灵魂伴侣，天生一对！",
+            "A": "你们非常契合，彼此理解默契！",
+            "B": "你们有一定的契合度，但仍需沟通。",
+            "C": "你们的个性有些差异，需要时间磨合。",
+            "D": "你们的世界观不同，可能需要更多理解。",
+            "E": "你们的匹配度较低，但仍然可以找到共同点。"
+        };
+        return summaries[getRating(score)];
+    }
+</script>
+</body>
+</html>
